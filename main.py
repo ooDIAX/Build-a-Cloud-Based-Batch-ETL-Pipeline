@@ -6,6 +6,7 @@ from google.cloud import storage
 
 def upload_to_gcs(bucket_name, destination_blob_name, data):
     """Uploads JSON data to GCS without using a service account JSON key."""
+    print("Start upload to GCS")
     
     # Initialize the GCS client (uses default credentials)
     client = storage.Client()
@@ -20,7 +21,7 @@ def upload_to_gcs(bucket_name, destination_blob_name, data):
     blob.upload_from_string(json.dumps(data), content_type='application/json')
     
     print(f"Data uploaded to gs://{bucket_name}/{destination_blob_name}")
-    
+
 @functions_framework.http
 def main(request):
     """Fetches hourly temperature data for Bangkok and returns it as JSON.
@@ -45,6 +46,7 @@ def main(request):
     response = requests.get(API_URL, params=params)
 
     if response.status_code == 200:
+        print(f"API call success")
         data = response.json()  # Convert response to JSON
 
         # Step 2: Extract relevant data
