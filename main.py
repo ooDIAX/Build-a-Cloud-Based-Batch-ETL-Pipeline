@@ -23,7 +23,7 @@ def upload_to_gcs(bucket_name, destination_blob_name, data):
     print(f"Data uploaded to gs://{bucket_name}/{destination_blob_name}")
 
 @functions_framework.http
-def main(request):
+def main():
     """Fetches hourly temperature data for Bangkok and returns it as JSON.
     
     Args:
