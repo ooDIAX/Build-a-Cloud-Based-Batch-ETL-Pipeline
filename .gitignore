@@ -42,3 +42,5 @@ credentials/
 
 # Logs
 *.log
+
+oldtrash.py
