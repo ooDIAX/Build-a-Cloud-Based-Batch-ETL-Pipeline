@@ -1,6 +1,7 @@
 import os
 import json
 import functions_framework
+import requests
 
 @functions_framework.http
 def main():
@@ -45,10 +46,10 @@ def main():
         }
 
         # Example usage
-        bucket_name = "zambara"
-        destination_blob_name = "bkk_weather.json"
+        # bucket_name = "zambara"
+        # destination_blob_name = "bkk_weather.json"
 
-        upload_to_gcs(bucket_name, destination_blob_name, response_data)
+        # upload_to_gcs(bucket_name, destination_blob_name, response_data)
 
         # Return JSON response
         return (json.dumps(response_data), 200, {'Content-Type': 'application/json'})
