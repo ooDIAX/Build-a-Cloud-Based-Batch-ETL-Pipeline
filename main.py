@@ -4,7 +4,7 @@ import functions_framework
 import requests
 
 @functions_framework.http
-def main():
+def main(request):
     """Fetches hourly temperature data for Bangkok and returns it as JSON.
     
     Args:
@@ -27,7 +27,6 @@ def main():
     response = requests.get(API_URL, params=params)
 
     if response.status_code == 200:
-        print(f"API call success")
         data = response.json()  # Convert response to JSON
 
         # Step 2: Extract relevant data
@@ -44,12 +43,6 @@ def main():
                 for t, temp in zip(timestamps, temperatures)
             ]
         }
-
-        # Example usage
-        # bucket_name = "zambara"
-        # destination_blob_name = "bkk_weather.json"
-
-        # upload_to_gcs(bucket_name, destination_blob_name, response_data)
 
         # Return JSON response
         return (json.dumps(response_data), 200, {'Content-Type': 'application/json'})
