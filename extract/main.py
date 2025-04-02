@@ -80,7 +80,7 @@ def main():
 
         upload_to_gcs(bucket_name, destination_blob_name, response_data)
 
-        return {"status": "success", "blob_name": destination_blob_name}, 200
+        return {"status": "success", "blob_name": destination_blob_name, "data": response_data}, 200
 
     else:
         return jsonify({"error": f"API call failed with status code {response.status_code}"}), response.status_code
