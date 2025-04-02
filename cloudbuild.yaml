@@ -1,34 +1,21 @@
 steps:
-  # Build the container image from the 'extract' folder
-  - name: 'gcr.io/cloud-builders/docker'
-    args: ['build', '-t', 'gcr.io/$PROJECT_ID/cloudrun-demo:$COMMIT_SHA', 'extract']
+    - name: 'gcr.io/cloud-builders/docker'
+      args: ['build', '-t', 'gcr.io/$PROJECT_ID/extract-service', '.']
+      dir: 'extract-service'
 
-  # Push the container image to Container Registry
-  - name: 'gcr.io/cloud-builders/docker'
-    args: ['push', 'gcr.io/$PROJECT_ID/cloudrun-demo:$COMMIT_SHA']
+    - name: 'gcr.io/cloud-builders/docker'
+      args: ['push', 'gcr.io/$PROJECT_ID/extract-service']
 
-  # Deploy container image to Cloud Run
-  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
-    entrypoint: gcloud
-    args:
-    - 'run'
-    - 'deploy'
-    - 'cloudrun-demo'
-    - '--image'
-    - 'gcr.io/$PROJECT_ID/cloudrun-demo:$COMMIT_SHA'
-    - '--region'
-    - 'us-central1'
-    - '--platform'
-    - 'managed'
-    - '--allow-unauthenticated'
-
-  # Also tag as latest
-  - name: 'gcr.io/cloud-builders/docker'
-    args: ['tag', 'gcr.io/$PROJECT_ID/cloudrun-demo:$COMMIT_SHA', 'gcr.io/$PROJECT_ID/cloudrun-demo:latest']
-
-  - name: 'gcr.io/cloud-builders/docker'
-    args: ['push', 'gcr.io/$PROJECT_ID/cloudrun-demo:latest']
+    - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+      args:
+          - 'run'
+          - 'deploy'
+          - 'extract-service'
+          - '--image=gcr.io/$PROJECT_ID/extract-service'
+          - '--region=us-central1'
+          - '--platform=managed'
+          - '--allow-unauthenticated'
+      entrypoint: 'gcloud'
 
 images:
-  - 'gcr.io/$PROJECT_ID/cloudrun-demo:$COMMIT_SHA'
-  - 'gcr.io/$PROJECT_ID/cloudrun-demo:latest'
+    - 'gcr.io/$PROJECT_ID/extract-service'
