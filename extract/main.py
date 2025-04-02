@@ -41,6 +41,7 @@ def upload_to_gcs(bucket_name, destination_blob_name, data):
 
 @app.route("/", methods=["GET"])
 def main():
+    return jsonify({"test": "works"}), 200
     """Fetches hourly temperature data for Bangkok and uploads it to GCS."""
 
     # API endpoint and parameters for Bangkok
@@ -85,5 +86,4 @@ def main():
 
 
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 8080))
-    app.run(host="0.0.0.0", port=port)
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 8080)))
