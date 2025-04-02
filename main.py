@@ -76,7 +76,7 @@ def main():
         bucket_name = "prujina"
 
         timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
-        destination_blob_name = f"Build-a-Cloud-Based-Batch-ETL-Pipeline/bkk_weather.json_{timestamp}.json"
+        destination_blob_name = f"Build-a-Cloud-Based-Batch-ETL-Pipeline/bkk_weather_{timestamp}.json"
 
         upload_to_gcs(bucket_name, destination_blob_name, response_data)
 
