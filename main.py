@@ -3,6 +3,7 @@ import json
 import requests
 from flask import Flask, request, jsonify
 from google.cloud import storage
+import logging
 
 app = Flask(__name__)
 
@@ -59,12 +60,12 @@ def main(req):
             ]
         }
 
-        # bucket_name = "prujina"
-        # destination_blob_name = "Build-a-Cloud-Based-Batch-ETL-Pipeline/bkk_weather.json"
+        bucket_name = "prujina"
+        destination_blob_name = "Build-a-Cloud-Based-Batch-ETL-Pipeline/bkk_weather.json"
 
-        # upload_to_gcs(bucket_name, destination_blob_name, response_data)
+        upload_to_gcs(bucket_name, destination_blob_name, response_data)
 
-        return jsonify(response_data), 200
+        return {"status": "success", "blob_name": destination_blob_name}, 200
 
     else:
         return jsonify({"error": f"API call failed with status code {response.status_code}"}), response.status_code
