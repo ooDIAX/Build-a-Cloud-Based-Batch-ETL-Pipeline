@@ -3,7 +3,6 @@ import json
 import requests
 from flask import Flask, request, jsonify
 from google.cloud import storage
-import logging
 
 app = Flask(__name__)
 
@@ -27,7 +26,7 @@ def upload_to_gcs(bucket_name, destination_blob_name, data):
 
 
 @app.route("/", methods=["GET"])
-def main(req):
+def main():
     """Fetches hourly temperature data for Bangkok and uploads it to GCS."""
 
     # API endpoint and parameters for Bangkok
