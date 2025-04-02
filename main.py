@@ -26,7 +26,7 @@ def upload_to_gcs(bucket_name, destination_blob_name, data):
 
 
 @app.route("/", methods=["GET"])
-def main():
+def main(req):
     """Fetches hourly temperature data for Bangkok and uploads it to GCS."""
 
     # API endpoint and parameters for Bangkok
