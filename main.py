@@ -7,22 +7,35 @@ from google.cloud import storage
 app = Flask(__name__)
 
 def upload_to_gcs(bucket_name, destination_blob_name, data):
-    """Uploads JSON data to GCS."""
-    print("Start upload to GCS")
+    """Uploads JSON data to GCS with error handling."""
+    try:
+        print("Start upload to GCS")
+        
+        # Initialize the GCS client (uses Cloud Run service account)
+        client = storage.Client()
+        
+        # Get the GCS bucket
+        bucket = client.bucket(bucket_name)
+        
+        # Create a blob (object) in the bucket
+        blob = bucket.blob(destination_blob_name)
+        
+        # Convert data to JSON format and upload
+        blob.upload_from_string(json.dumps(data), content_type='application/json')
+        
+        print(f"Data uploaded to gs://{bucket_name}/{destination_blob_name}")
     
-    # Initialize the GCS client (uses Cloud Run service account)
-    client = storage.Client()
+    except storage.exceptions.GoogleCloudError as e:
+        # Catch Google Cloud storage specific errors
+        print(f"Google Cloud Storage error: {e}")
     
-    # Get the GCS bucket
-    bucket = client.bucket(bucket_name)
+    except json.JSONDecodeError as e:
+        # Handle errors that might occur while converting to JSON
+        print(f"JSON encoding error: {e}")
     
-    # Create a blob (object) in the bucket
-    blob = bucket.blob(destination_blob_name)
-    
-    # Convert data to JSON format and upload
-    blob.upload_from_string(json.dumps(data), content_type='application/json')
-    
-    print(f"Data uploaded to gs://{bucket_name}/{destination_blob_name}")
+    except Exception as e:
+        # Catch any other exceptions
+        print(f"An unexpected error occurred: {e}")
 
 
 @app.route("/", methods=["GET"])
