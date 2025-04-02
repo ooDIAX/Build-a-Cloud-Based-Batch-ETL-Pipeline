@@ -65,7 +65,7 @@ def main(request):
         }
 
         bucket_name = "prujina"
-        destination_blob_name = "bkk_weather.json"
+        destination_blob_name = "Build-a-Cloud-Based-Batch-ETL-Pipeline/bkk_weather.json"
 
         upload_to_gcs(bucket_name, destination_blob_name, response_data)
 
