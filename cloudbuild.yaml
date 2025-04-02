@@ -1,21 +1,21 @@
 steps:
     - name: 'gcr.io/cloud-builders/docker'
-      args: ['build', '-t', 'gcr.io/$PROJECT_ID/extract-service', '.']
+      args: ['build', '-t', 'gcr.io/$PROJECT_ID', '.']
       dir: 'extract-service'
 
     - name: 'gcr.io/cloud-builders/docker'
-      args: ['push', 'gcr.io/$PROJECT_ID/extract-service']
+      args: ['push', 'gcr.io/$PROJECT_ID']
 
     - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
       args:
           - 'run'
           - 'deploy'
           - 'extract-service'
-          - '--image=gcr.io/$PROJECT_ID/extract-service'
+          - '--image=gcr.io/$PROJECT_ID'
           - '--region=us-central1'
           - '--platform=managed'
           - '--allow-unauthenticated'
       entrypoint: 'gcloud'
 
 images:
-    - 'gcr.io/$PROJECT_ID/extract-service'
+    - 'gcr.io/$PROJECT_ID'
