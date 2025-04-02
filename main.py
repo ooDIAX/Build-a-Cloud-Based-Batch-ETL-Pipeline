@@ -3,6 +3,7 @@ import json
 import requests
 from flask import Flask, request, jsonify
 from google.cloud import storage
+from datetime import datetime
 
 app = Flask(__name__)
 
@@ -73,7 +74,9 @@ def main():
         }
 
         bucket_name = "prujina"
-        destination_blob_name = "Build-a-Cloud-Based-Batch-ETL-Pipeline/bkk_weather.json"
+
+        timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
+        destination_blob_name = f"Build-a-Cloud-Based-Batch-ETL-Pipeline/bkk_weather.json_{timestamp}.json"
 
         upload_to_gcs(bucket_name, destination_blob_name, response_data)
 
