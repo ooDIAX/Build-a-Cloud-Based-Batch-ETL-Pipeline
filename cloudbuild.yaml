@@ -1,11 +1,12 @@
 steps:
   # Build the container image
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['build', '-t', 'gcr.io/$PROJECT_ID/cloudrun-demo:$COMMIT_SHA', '.']
+    args: ['build', '-t', 'gcr.io/$PROJECT_ID/extract/cloudrun-demo:$COMMIT_SHA', '.']
+    dir : 'extract'
   
   # Push the container image to Container Registry
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['push', 'gcr.io/$PROJECT_ID/cloudrun-demo:$COMMIT_SHA']
+    args: ['push', 'gcr.io/$PROJECT_ID/extract/cloudrun-demo:$COMMIT_SHA']
   
   # Deploy container image to Cloud Run
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
@@ -15,7 +16,7 @@ steps:
     - 'deploy'
     - 'cloudrun-demo'
     - '--image'
-    - 'gcr.io/$PROJECT_ID/cloudrun-demo:$COMMIT_SHA'
+    - 'gcr.io/$PROJECT_ID/extract/cloudrun-demo:$COMMIT_SHA'
     - '--region'
     - 'us-central1'
     - '--platform'
@@ -24,11 +25,11 @@ steps:
   
   # Also tag as latest
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['tag', 'gcr.io/$PROJECT_ID/cloudrun-demo:$COMMIT_SHA', 'gcr.io/$PROJECT_ID/cloudrun-demo:latest']
+    args: ['tag', 'gcr.io/$PROJECT_ID/extract/cloudrun-demo:$COMMIT_SHA', 'gcr.io/$PROJECT_ID/extract/cloudrun-demo:latest']
   
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['push', 'gcr.io/$PROJECT_ID/cloudrun-demo:latest']
+    args: ['push', 'gcr.io/$PROJECT_ID/extract/cloudrun-demo:latest']
 
 images:
-  - 'gcr.io/$PROJECT_ID/cloudrun-demo:$COMMIT_SHA'
-  - 'gcr.io/$PROJECT_ID/cloudrun-demo:latest'
+  - 'gcr.io/$PROJECT_ID/extract/cloudrun-demo:$COMMIT_SHA'
+  - 'gcr.io/$PROJECT_ID/extract/cloudrun-demo:latest'
