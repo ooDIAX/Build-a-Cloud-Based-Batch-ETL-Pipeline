@@ -2,6 +2,26 @@ import os
 import json
 import functions_framework
 import requests
+from google.cloud import storage
+
+def upload_to_gcs(bucket_name, destination_blob_name, data):
+    """Uploads JSON data to GCS without using a service account JSON key."""
+    print("Start upload to GCS")
+    
+    # Initialize the GCS client (uses default credentials)
+    client = storage.Client()
+    
+    # Get the GCS bucket
+    bucket = client.bucket(bucket_name)
+    
+    # Create a blob (object) in the bucket
+    blob = bucket.blob(destination_blob_name)
+    
+    # Convert data to JSON format and upload
+    blob.upload_from_string(json.dumps(data), content_type='application/json')
+    
+    print(f"Data uploaded to gs://{bucket_name}/{destination_blob_name}")
+
 
 @functions_framework.http
 def main(request):
@@ -43,6 +63,11 @@ def main(request):
                 for t, temp in zip(timestamps, temperatures)
             ]
         }
+
+        bucket_name = "prujina"
+        destination_blob_name = "bkk_weather.json"
+
+        upload_to_gcs(bucket_name, destination_blob_name, response_data)
 
         # Return JSON response
         return (json.dumps(response_data), 200, {'Content-Type': 'application/json'})
