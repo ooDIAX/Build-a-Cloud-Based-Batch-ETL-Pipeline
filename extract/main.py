@@ -1,87 +1,45 @@
 import os
+import json
 import requests
-from flask import Flask, jsonify
+from flask import Flask, request, jsonify
 from google.cloud import storage
 from datetime import datetime
 
 app = Flask(__name__)
 
-# Configuration
-RIOT_API_KEY = "RGAPI-9839e078-e41b-4548-8726-188eb40ca4ae"  # Replace with your Riot API key
-GCS_BUCKET_NAME = "t1dashboard"  # Replace with your GCS bucket name
-REGION = "asia"  # Riot API region (adjust if targeting KR server)
-
-# T1's active 2025 roster with Riot IDs (gameName#tagLine)
-PLAYERS = [
-    "Doran#KR1",  # Choi "Doran" Hyeon-joon
-    "Oner#KR1",   # Mun "Oner" Hyeon-jun
-    "Faker#KR1",  # Lee "Faker" Sang-hyeok
-    "Gumayusi#KR1",  # Lee "Gumayusi" Min-hyeong
-    "Keria#KR1"   # Ryu "Keria" Min-seok
-]
-
-# Initialize GCS client
-storage_client = storage.Client()
-
-def get_puuid(riot_id):
-    game_name, tag_line = riot_id.split("#")
-    url = f"https://{REGION}.api.riotgames.com/riot/account/v1/accounts/by-riot-id/{game_name}/{tag_line}"
-    headers = {"X-Riot-Token": RIOT_API_KEY}
-    response = requests.get(url, headers=headers)
-    if response.status_code == 200:
-        return response.json()["puuid"]
-    else:
-        raise Exception(f"Failed to get PUUID for {riot_id}: {response.status_code}")
-
-def get_last_matches(puuid, count=5):
-    url = f"https://{REGION}.api.riotgames.com/lol/match/v5/matches/by-puuid/{puuid}/ids?count={count}"
-    headers = {"X-Riot-Token": RIOT_API_KEY}
-    response = requests.get(url, headers=headers)
-    if response.status_code == 200:
-        return response.json()
-    else:
-        raise Exception(f"Failed to get matches for PUUID {puuid}: {response.status_code}")
-
-def get_match_details(match_id):
-    url = f"https://{REGION}.api.riotgames.com/lol/match/v5/matches/{match_id}"
-    headers = {"X-Riot-Token": RIOT_API_KEY}
-    response = requests.get(url, headers=headers)
-    if response.status_code == 200:
-        return response.json()
-    else:
-        raise Exception(f"Failed to get match details for {match_id}: {response.status_code}")
-
-def upload_to_gcs(data, destination_blob_name):
-    bucket = storage_client.bucket(GCS_BUCKET_NAME)
-    blob = bucket.blob(destination_blob_name)
-    blob.upload_from_string(str(data), content_type="application/json")
-    return f"gs://{GCS_BUCKET_NAME}/{destination_blob_name}"
-
-# @app.route("/fetch-stats", methods=["GET"])
-# def fetch_stats():
-#     return jsonify({"test": "works"}), 200
-#     try:
-#         all_player_data = {}
-#         for player in PLAYERS:
-#             # Get PUUID using Riot ID
-#             puuid = get_puuid(player)
-#             # Get last 5 match IDs
-#             match_ids = get_last_matches(puuid)
-#             # Get match details
-#             matches = [get_match_details(match_id) for match_id in match_ids]
-#             all_player_data[player] = matches
-
-#         # Generate a unique filename with timestamp
-#         timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
-#         filename = f"t1_riot_data_{timestamp}.json"
-
-#         # Upload to GCS
-#         gcs_uri = upload_to_gcs(all_player_data, filename)
-#         return jsonify({"message": "T1 roster data fetched and uploaded", "gcs_uri": gcs_uri}), 200
-#     except Exception as e:
-#         return jsonify({"error": str(e)}), 500
+def upload_to_gcs(bucket_name, destination_blob_name, data):
+    """Uploads JSON data to GCS with error handling."""
+    try:
+        print("Start upload to GCS")
+        
+        # Initialize the GCS client (uses Cloud Run service account)
+        client = storage.Client()
+        
+        # Get the GCS bucket
+        bucket = client.bucket(bucket_name)
+        
+        # Create a blob (object) in the bucket
+        blob = bucket.blob(destination_blob_name)
+        
+        # Convert data to JSON format and upload
+        blob.upload_from_string(json.dumps(data), content_type='application/json')
+        
+        print(f"Data uploaded to gs://{bucket_name}/{destination_blob_name}")
     
-app.route("/", methods=["GET"])
+    except storage.exceptions.GoogleCloudError as e:
+        # Catch Google Cloud storage specific errors
+        print(f"Google Cloud Storage error: {e}")
+    
+    except json.JSONDecodeError as e:
+        # Handle errors that might occur while converting to JSON
+        print(f"JSON encoding error: {e}")
+    
+    except Exception as e:
+        # Catch any other exceptions
+        print(f"An unexpected error occurred: {e}")
+
+
+@app.route("/", methods=["GET"])
 def main():
     """Fetches hourly temperature data for Bangkok and uploads it to GCS."""
 
@@ -115,10 +73,17 @@ def main():
             ]
         }
 
-        return {"data": response_data}, 200
+        bucket_name = "prujina"
+        destination_blob_name = f"Build-a-Cloud-Based-Batch-ETL-Pipeline/bkk_weather.json"
+
+        upload_to_gcs(bucket_name, destination_blob_name, response_data)
+
+        return {"status": "success", "blob_name": destination_blob_name, "data": response_data}, 200
 
     else:
         return jsonify({"error": f"API call failed with status code {response.status_code}"}), response.status_code
 
+
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 8080)))
+    port = int(os.environ.get("PORT", 8080))
+    app.run(host="0.0.0.0", port=port)
