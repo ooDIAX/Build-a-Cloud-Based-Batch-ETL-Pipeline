@@ -57,29 +57,68 @@ def upload_to_gcs(data, destination_blob_name):
     blob.upload_from_string(str(data), content_type="application/json")
     return f"gs://{GCS_BUCKET_NAME}/{destination_blob_name}"
 
-@app.route("/fetch-stats", methods=["GET"])
-def fetch_stats():
-    return jsonify({"test": "works"}), 200
-    try:
-        all_player_data = {}
-        for player in PLAYERS:
-            # Get PUUID using Riot ID
-            puuid = get_puuid(player)
-            # Get last 5 match IDs
-            match_ids = get_last_matches(puuid)
-            # Get match details
-            matches = [get_match_details(match_id) for match_id in match_ids]
-            all_player_data[player] = matches
+# @app.route("/fetch-stats", methods=["GET"])
+# def fetch_stats():
+#     return jsonify({"test": "works"}), 200
+#     try:
+#         all_player_data = {}
+#         for player in PLAYERS:
+#             # Get PUUID using Riot ID
+#             puuid = get_puuid(player)
+#             # Get last 5 match IDs
+#             match_ids = get_last_matches(puuid)
+#             # Get match details
+#             matches = [get_match_details(match_id) for match_id in match_ids]
+#             all_player_data[player] = matches
 
-        # Generate a unique filename with timestamp
-        timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
-        filename = f"t1_riot_data_{timestamp}.json"
+#         # Generate a unique filename with timestamp
+#         timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
+#         filename = f"t1_riot_data_{timestamp}.json"
 
-        # Upload to GCS
-        gcs_uri = upload_to_gcs(all_player_data, filename)
-        return jsonify({"message": "T1 roster data fetched and uploaded", "gcs_uri": gcs_uri}), 200
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+#         # Upload to GCS
+#         gcs_uri = upload_to_gcs(all_player_data, filename)
+#         return jsonify({"message": "T1 roster data fetched and uploaded", "gcs_uri": gcs_uri}), 200
+#     except Exception as e:
+#         return jsonify({"error": str(e)}), 500
+    
+app.route("/", methods=["GET"])
+def main():
+    """Fetches hourly temperature data for Bangkok and uploads it to GCS."""
+
+    # API endpoint and parameters for Bangkok
+    API_URL = "https://api.open-meteo.com/v1/forecast"
+    params = {
+        "latitude": 13.7563,  # Bangkok latitude
+        "longitude": 100.5018,  # Bangkok longitude
+        "hourly": "temperature_2m",
+        "timezone": "Asia/Bangkok"
+    }
+
+    # Step 1: Make API Request
+    response = requests.get(API_URL, params=params)
+
+    if response.status_code == 200:
+        data = response.json()  # Convert response to JSON
+
+        # Step 2: Extract relevant data
+        timestamps = data["hourly"]["time"]
+        temperatures = data["hourly"]["temperature_2m"]
+
+        # Step 3: Structure response data
+        response_data = {
+            "city": "Bangkok",
+            "latitude": params["latitude"],
+            "longitude": params["longitude"],
+            "hourly_temperatures": [
+                {"timestamp": t, "temperature": temp}
+                for t, temp in zip(timestamps, temperatures)
+            ]
+        }
+
+        return {"data": response_data}, 200
+
+    else:
+        return jsonify({"error": f"API call failed with status code {response.status_code}"}), response.status_code
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 8080)))
