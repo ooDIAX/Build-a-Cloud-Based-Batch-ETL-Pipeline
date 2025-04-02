@@ -1,5 +1,6 @@
 flask==3.0.3
 requests==2.32.3
 google-cloud-storage==2.18.2
+google-cloud-bigquery
 gunicorn==23.0.0
 werkzeug==3.0.4
