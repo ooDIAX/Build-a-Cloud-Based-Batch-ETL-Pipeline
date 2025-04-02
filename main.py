@@ -1,14 +1,16 @@
 import os
 import json
-import functions_framework
 import requests
+from flask import Flask, request, jsonify
 from google.cloud import storage
 
+app = Flask(__name__)
+
 def upload_to_gcs(bucket_name, destination_blob_name, data):
-    """Uploads JSON data to GCS without using a service account JSON key."""
+    """Uploads JSON data to GCS."""
     print("Start upload to GCS")
     
-    # Initialize the GCS client (uses default credentials)
+    # Initialize the GCS client (uses Cloud Run service account)
     client = storage.Client()
     
     # Get the GCS bucket
@@ -23,16 +25,9 @@ def upload_to_gcs(bucket_name, destination_blob_name, data):
     print(f"Data uploaded to gs://{bucket_name}/{destination_blob_name}")
 
 
-@functions_framework.http
-def main(request):
-    """Fetches hourly temperature data for Bangkok and returns it as JSON.
-    
-    Args:
-        request: HTTP request object.
-        
-    Returns:
-        JSON response containing the hourly temperature data.
-    """
+@app.route("/", methods=["GET"])
+def main():
+    """Fetches hourly temperature data for Bangkok and uploads it to GCS."""
 
     # API endpoint and parameters for Bangkok
     API_URL = "https://api.open-meteo.com/v1/forecast"
@@ -69,10 +64,12 @@ def main(request):
 
         upload_to_gcs(bucket_name, destination_blob_name, response_data)
 
-        # Return JSON response
-        return (json.dumps(response_data), 200, {'Content-Type': 'application/json'})
+        return jsonify(response_data), 200
 
     else:
-        # Handle API failure
-        error_response = {"error": f"API call failed with status code {response.status_code}"}
-        return (json.dumps(error_response), response.status_code, {'Content-Type': 'application/json'})
+        return jsonify({"error": f"API call failed with status code {response.status_code}"}), response.status_code
+
+
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 8080))
+    app.run(host="0.0.0.0", port=port)
